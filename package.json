@@ -1,7 +1,7 @@
 {
     "name": "raid-bot",
     "version": "1.0.0",
-    "description": "Bot de raid para Discord",
+    "description": "Bot para Discord",
     "main": "index.js",
     "scripts": {
         "start": "node index.js"
