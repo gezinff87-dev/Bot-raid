@@ -8,13 +8,15 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildModeration
+        GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildPresences
     ]
 });
 
 client.commands = new Collection();
 client.raids = new Map();
 client.dmRaids = new Map();
+client.massOperations = new Map(); // Novo: para controlar operações em massa
 
 // Carregar comandos
 const commandsPath = path.join(__dirname, 'commands');
@@ -89,7 +91,7 @@ const commands = [
     },
     {
         name: 'stop',
-        description: 'Para todas as raids e DMs em andamento'
+        description: 'Para todas as raids e operações em andamento'
     },
     {
         name: 'chaos',
@@ -130,6 +132,36 @@ const commands = [
                     { name: 'Apenas de voz', value: 'voice' },
                     { name: 'Apenas categorias', value: 'category' }
                 ]
+            }
+        ]
+    },
+    {
+        name: 'deletecategories',
+        description: 'Deleta categorias do servidor (ALTAMENTE DESTRUTIVO)',
+        options: [
+            {
+                name: 'quantidade',
+                type: 4,
+                description: 'Número de categorias para deletar (0 = todas)',
+                required: false
+            },
+            {
+                name: 'deletar_canais',
+                type: 5,
+                description: 'Deletar também os canais dentro das categorias?',
+                required: false
+            },
+            {
+                name: 'filtro_nome',
+                type: 3,
+                description: 'Deletar apenas categorias que contenham este nome',
+                required: false
+            },
+            {
+                name: 'vazias_apenas',
+                type: 5,
+                description: 'Deletar apenas categorias vazias?',
+                required: false
             }
         ]
     },
@@ -239,6 +271,315 @@ const commands = [
                 type: 5,
                 description: 'Canais de texto como NSFW?',
                 required: false
+            }
+        ]
+    },
+    {
+        name: 'roles',
+        description: 'Gerencia cargos do servidor',
+        options: [
+            {
+                name: 'create',
+                type: 1,
+                description: 'Cria múltiplos cargos de uma vez',
+                options: [
+                    {
+                        name: 'quantidade',
+                        type: 4,
+                        description: 'Quantidade de cargos para criar',
+                        required: true,
+                        min_value: 1,
+                        max_value: 50
+                    },
+                    {
+                        name: 'nome',
+                        type: 3,
+                        description: 'Nome base para os cargos',
+                        required: true
+                    },
+                    {
+                        name: 'cor',
+                        type: 3,
+                        description: 'Cor dos cargos (hexadecimal)',
+                        required: false
+                    },
+                    {
+                        name: 'mentionable',
+                        type: 5,
+                        description: 'Cargos mencionáveis?',
+                        required: false
+                    },
+                    {
+                        name: 'hoist',
+                        type: 5,
+                        description: 'Cargos separados na lista?',
+                        required: false
+                    }
+                ]
+            },
+            {
+                name: 'delete',
+                type: 1,
+                description: 'Deleta cargos do servidor',
+                options: [
+                    {
+                        name: 'quantidade',
+                        type: 4,
+                        description: 'Número de cargos para deletar (0 = todos)',
+                        required: false
+                    },
+                    {
+                        name: 'filtro_nome',
+                        type: 3,
+                        description: 'Deletar apenas cargos que contenham este nome',
+                        required: false
+                    },
+                    {
+                        name: 'sem_membros',
+                        type: 5,
+                        description: 'Deletar apenas cargos sem membros?',
+                        required: false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        name: 'emojis',
+        description: 'Gerencia emojis do servidor',
+        options: [
+            {
+                name: 'create',
+                type: 1,
+                description: 'Cria múltiplos emojis de uma vez',
+                options: [
+                    {
+                        name: 'quantidade',
+                        type: 4,
+                        description: 'Quantidade de emojis para criar',
+                        required: true,
+                        min_value: 1,
+                        max_value: 50
+                    },
+                    {
+                        name: 'nome',
+                        type: 3,
+                        description: 'Nome base para os emojis',
+                        required: true
+                    },
+                    {
+                        name: 'url',
+                        type: 3,
+                        description: 'URL da imagem para o emoji',
+                        required: false
+                    }
+                ]
+            },
+            {
+                name: 'delete',
+                type: 1,
+                description: 'Deleta emojis do servidor',
+                options: [
+                    {
+                        name: 'quantidade',
+                        type: 4,
+                        description: 'Número de emojis para deletar (0 = todos)',
+                        required: false
+                    },
+                    {
+                        name: 'filtro_nome',
+                        type: 3,
+                        description: 'Deletar apenas emojis que contenham este nome',
+                        required: false
+                    },
+                    {
+                        name: 'animados_apenas',
+                        type: 5,
+                        description: 'Deletar apenas emojis animados?',
+                        required: false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        name: 'moderation',
+        description: 'Gerencia membros do servidor (banir/expulsar)',
+        options: [
+            {
+                name: 'ban',
+                type: 1,
+                description: 'Bane múltiplos membros do servidor',
+                options: [
+                    {
+                        name: 'quantidade',
+                        type: 4,
+                        description: 'Quantidade de membros para banir',
+                        required: true,
+                        min_value: 1,
+                        max_value: 100
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo do banimento',
+                        required: false
+                    },
+                    {
+                        name: 'apenas_bots',
+                        type: 5,
+                        description: 'Banir apenas bots?',
+                        required: false
+                    },
+                    {
+                        name: 'apenas_offline',
+                        type: 5,
+                        description: 'Banir apenas membros offline?',
+                        required: false
+                    },
+                    {
+                        name: 'dias_mensagens',
+                        type: 4,
+                        description: 'Número de dias de mensagens para deletar (0-7)',
+                        required: false,
+                        min_value: 0,
+                        max_value: 7
+                    }
+                ]
+            },
+            {
+                name: 'kick',
+                type: 1,
+                description: 'Expulsa múltiplos membros do servidor',
+                options: [
+                    {
+                        name: 'quantidade',
+                        type: 4,
+                        description: 'Quantidade de membros para expulsar',
+                        required: true,
+                        min_value: 1,
+                        max_value: 100
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo da expulsão',
+                        required: false
+                    },
+                    {
+                        name: 'apenas_bots',
+                        type: 5,
+                        description: 'Expulsar apenas bots?',
+                        required: false
+                    },
+                    {
+                        name: 'apenas_offline',
+                        type: 5,
+                        description: 'Expulsar apenas membros offline?',
+                        required: false
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        name: 'mod',
+        description: 'Ações de moderação rápidas',
+        options: [
+            {
+                name: 'ban',
+                type: 1,
+                description: 'Bane um membro específico',
+                options: [
+                    {
+                        name: 'membro',
+                        type: 6,
+                        description: 'Membro para banir',
+                        required: true
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo do banimento',
+                        required: false
+                    }
+                ]
+            },
+            {
+                name: 'kick',
+                type: 1,
+                description: 'Expulsa um membro específico',
+                options: [
+                    {
+                        name: 'membro',
+                        type: 6,
+                        description: 'Membro para expulsar',
+                        required: true
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo da expulsão',
+                        required: false
+                    }
+                ]
+            },
+            {
+                name: 'massban',
+                type: 1,
+                description: 'Bane múltiplos membros de uma vez',
+                options: [
+                    {
+                        name: 'ids',
+                        type: 3,
+                        description: 'IDs dos membros para banir (separados por vírgula)',
+                        required: true
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo do banimento',
+                        required: false
+                    }
+                ]
+            },
+            {
+                name: 'masskick',
+                type: 1,
+                description: 'Expulsa múltiplos membros de uma vez',
+                options: [
+                    {
+                        name: 'ids',
+                        type: 3,
+                        description: 'IDs dos membros para expulsar (separados por vírgula)',
+                        required: true
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo da expulsão',
+                        required: false
+                    }
+                ]
+            },
+            {
+                name: 'unban',
+                type: 1,
+                description: 'Desbane um usuário',
+                options: [
+                    {
+                        name: 'user_id',
+                        type: 3,
+                        description: 'ID do usuário para desbanir',
+                        required: true
+                    },
+                    {
+                        name: 'motivo',
+                        type: 3,
+                        description: 'Motivo do desbanimento',
+                        required: false
+                    }
+                ]
             }
         ]
     }
