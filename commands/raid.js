@@ -17,7 +17,7 @@ module.exports = {
                 .setDescription('Número de mensagens')
                 .setRequired(false)),
     
-    async execute(interaction) {
+    async execute(interaction, client) {
         if (!interaction.member.permissions.has('ADMINISTRATOR')) {
             return await interaction.reply({ 
                 content: '❌ Você precisa de permissão de administrador!', 
@@ -32,20 +32,29 @@ module.exports = {
 
         const channel = interaction.options.getChannel('canal');
         const message = interaction.options.getString('mensagem');
-        const times = interaction.options.getInteger('vezes') || 10;
+        const times = interaction.options.getInteger('vezes') || 50;
 
-        for (let i = 0; i < times; i++) {
+        const raidId = `${interaction.guildId}-${channel.id}`;
+        client.raids.set(raidId, true);
+
+        let sent = 0;
+        let errors = 0;
+
+        for (let i = 0; i < times && client.raids.get(raidId); i++) {
             try {
                 await channel.send(message);
-                // Delay para evitar rate limit
+                sent++;
                 await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (error) {
+                errors++;
                 console.error('Erro ao enviar mensagem:', error);
             }
         }
 
+        client.raids.delete(raidId);
+
         await interaction.followUp({ 
-            content: `✅ Raid concluída! ${times} mensagens enviadas.`, 
+            content: `✅ Raid ${client.raids.get(raidId) ? 'interrompida' : 'concluída'}! Mensagens: ${sent}, Erros: ${errors}`, 
             ephemeral: true 
         });
     }
