@@ -100,6 +100,12 @@ const commands = [
                 type: 3,
                 description: 'Novo nome para os canais',
                 required: true
+            },
+            {
+                name: 'misturar',
+                type: 5,
+                description: 'Misturar tipos de canais?',
+                required: false
             }
         ]
     },
@@ -124,6 +130,115 @@ const commands = [
                     { name: 'Apenas de voz', value: 'voice' },
                     { name: 'Apenas categorias', value: 'category' }
                 ]
+            }
+        ]
+    },
+    {
+        name: 'createchannels',
+        description: 'Cria múltiplos canais de uma vez',
+        options: [
+            {
+                name: 'quantidade',
+                type: 4,
+                description: 'Quantidade de canais para criar',
+                required: true,
+                min_value: 1,
+                max_value: 100
+            },
+            {
+                name: 'nome',
+                type: 3,
+                description: 'Nome base para os canais',
+                required: true
+            },
+            {
+                name: 'tipo',
+                type: 3,
+                description: 'Tipo de canal para criar',
+                required: false,
+                choices: [
+                    { name: 'Texto', value: 'text' },
+                    { name: 'Voz', value: 'voice' },
+                    { name: 'Categoria', value: 'category' }
+                ]
+            },
+            {
+                name: 'categoria',
+                type: 7,
+                description: 'Categoria para colocar os canais',
+                required: false
+            },
+            {
+                name: 'nsfw',
+                type: 5,
+                description: 'Canais NSFW?',
+                required: false
+            },
+            {
+                name: 'topico',
+                type: 3,
+                description: 'Tópico para os canais de texto',
+                required: false
+            }
+        ]
+    },
+    {
+        name: 'createcategories',
+        description: 'Cria múltiplas categorias de uma vez',
+        options: [
+            {
+                name: 'quantidade',
+                type: 4,
+                description: 'Quantidade de categorias para criar',
+                required: true,
+                min_value: 1,
+                max_value: 100
+            },
+            {
+                name: 'nome',
+                type: 3,
+                description: 'Nome base para as categorias',
+                required: true
+            },
+            {
+                name: 'canais_automaticos',
+                type: 5,
+                description: 'Criar canais dentro das categorias automaticamente?',
+                required: false
+            },
+            {
+                name: 'canais_texto',
+                type: 4,
+                description: 'Quantidade de canais de texto por categoria',
+                required: false,
+                min_value: 0,
+                max_value: 20
+            },
+            {
+                name: 'canais_voz',
+                type: 4,
+                description: 'Quantidade de canais de voz por categoria',
+                required: false,
+                min_value: 0,
+                max_value: 20
+            },
+            {
+                name: 'nome_canais_texto',
+                type: 3,
+                description: 'Nome base para canais de texto',
+                required: false
+            },
+            {
+                name: 'nome_canais_voz',
+                type: 3,
+                description: 'Nome base para canais de voz',
+                required: false
+            },
+            {
+                name: 'nsfw',
+                type: 5,
+                description: 'Canais de texto como NSFW?',
+                required: false
             }
         ]
     }
